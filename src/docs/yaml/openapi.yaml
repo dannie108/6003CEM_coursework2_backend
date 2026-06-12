@@ -1,0 +1,170 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Back End Demo API
+  description: A simple blog API
+  contact:
+    name: Chan Tai Man
+    email: ctm@example.com
+  license:
+    name: Apache 2.0
+    url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+servers:
+  - url: 'http://localhost:10888/api/v1/'
+    description: Development server
+tags:
+  - name: Users
+    description: API endpoints for user management.
+  - name: Articles
+    description: Access and perform CRUD operations on blog entries.
+paths:
+  /articles:
+    get:
+      tags:
+        - Articles
+      description:
+        Get ALL articles from database
+      responses:
+        '200':
+          description: View of ALL article records.
+    post:
+      tags:
+        - Articles
+      description:
+        Create an Articles
+      requestBody:
+        description: All new article content
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./article.json#/definitions/article
+      responses:
+        '201':
+          description: Created an article.
+        '500':
+          description: Article was create failed.
+
+  /articles/{id}:
+    parameter:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: Numeric id of the article
+    get:
+      tags:
+        - Articles
+      description:
+        Get article by id.
+      responses:
+        '200':
+          description: View of an article record.
+        '400':
+          description: Invalid ID.
+        '404':
+          description: Article was not found in the DB.
+    put:
+      tags:
+        - Articles
+      description:
+        Update article by id.
+      requestBody:
+        description: Update article content
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./article.json#/definitions/article
+      responses:
+        '201':
+          description: Article updated
+        '400':
+          description: Invalid ID.
+        '500':
+          description: Article was update failed.
+    delete:
+      tags:
+        - Articles
+      description:
+        Delete article by id.
+      responses:
+        '201':
+          description: Article deleted.
+        '400':
+          description: Invalid ID.
+        '500':
+          description: Article was delete failed.
+  /users:
+    get:
+      tags:
+        - Users
+      description:
+        Get ALL users from database
+      responses:
+        '200':
+          description: View of ALL users records.
+    post:
+      tags:
+        - Users
+      description:
+        Create new user.
+      requestBody:
+        description: All new user data.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./user.json#/definitions/user
+      responses:
+        '201':
+          description: Create a user.
+        '500':
+          description: User could not be created.
+
+  /users/{id}:
+    parameter:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: Numeric id of the article
+    get:
+      tags:
+        - Users
+      description:
+        Get user by id.
+      responses:
+        '200':
+          description: View of the user record.
+        '404':
+          description: User was not found in DB.
+    put:
+      tags:
+        - Users
+      description:
+        Update user by id.
+      requestBody:
+        description: Update user info
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./user.json#/definitions/user
+      responses:
+        '201':
+          description: Update user and link to record.
+        '500':
+          description: User could not be updated.
+    delete:
+      tags:
+        - Users
+      description:
+        Delete user by id.
+      responses:
+        '201':
+          description: Delete user.
+        '500':
+          description: User could not be deleted.

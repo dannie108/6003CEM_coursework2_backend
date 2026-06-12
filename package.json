@@ -1,0 +1,44 @@
+{
+  "dependencies": {
+    "@koa/cors": "^5.0.0",
+    "@types/koa": "^3.0.1",
+    "@types/koa__cors": "^5.0.1",
+    "@types/koa-bodyparser": "^4.3.13",
+    "@types/koa-json": "^2.0.24",
+    "@types/koa-logger": "^3.1.5",
+    "@types/koa-passport": "^6.0.3",
+    "@types/koa-router": "^7.4.9",
+    "@types/koa-static": "^4.0.4",
+    "@types/passport-http": "^0.3.11",
+    "@types/sequelize": "^4.28.20",
+    "jsonschema": "^1.5.0",
+    "koa": "^3.1.2",
+    "koa-bodyparser": "^4.4.1",
+    "koa-json": "^2.0.2",
+    "koa-logger": "^4.0.0",
+    "koa-passport": "^6.0.0",
+    "koa-router": "^14.0.0",
+    "koa-static": "^5.0.0",
+    "mysql2": "^3.22.3",
+    "passport-http": "^0.3.0",
+    "pg": "^8.20.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/jest": "^30.0.0",
+    "@types/supertest": "^7.2.0",
+    "eslint": "^10.3.0",
+    "jest": "^30.3.0",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.9",
+    "typescript-eslint": "^8.59.2"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:folder": "jest test/",
+    "test:watch": "jest --watch",
+    "build": "tsc && xcopy src\\docs out\\docs /E /I /Y"
+  }
+}
