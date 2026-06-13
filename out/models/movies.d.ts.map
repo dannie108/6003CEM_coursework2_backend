@@ -1,0 +1,1 @@
+{"version":3,"file":"movies.d.ts","sourceRoot":"","sources":["../../src/models/movies.ts"],"names":[],"mappings":"AAIA,eAAO,MAAM,MAAM,yBAGlB,CAAC;AAGF,eAAO,MAAM,OAAO,GAAU,IAAI,MAAM,sBAGvC,CAAC;AAGF,eAAO,MAAM,GAAG,GAAU,OAAO,GAAG;;;;;;EAanC,CAAC;AAGF,eAAO,MAAM,MAAM,GAAU,IAAI,MAAM,EAAE,OAAO,GAAG;;;;;;EAkBlD,CAAC;AAGF,eAAO,MAAM,GAAG,GAAU,IAAI,MAAM;;;;;;EAUnC,CAAC"}

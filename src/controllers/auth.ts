@@ -1,60 +1,52 @@
-//auth.ts
-import passport from "koa-passport";
-import { BasicStrategy } from "passport-http";
+// src/controllers/auth.ts
 import { RouterContext } from "koa-router";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import * as users from "../models/users";
 
-import * as users from '../models/users';
+const SECRET_KEY = "your_secret_key"; // 建議放到 config.ts
 
-//{username:xxx, password:...}, password
-const verifyPassword = (user:any, password:string) => {
-    return user.password === password;
-}
+// 註冊新使用者
+export const register = async (ctx: RouterContext, next: any) => {
+  const { username, password } = ctx.request.body as { username: string; password: string };
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-// passport.use(new BasicStrategy(async (username:string, password:string, done) => {
-//     if(username === "admin" && password === "password") {
-//         done(null, {username: "admin"});
-//     } else {
-//         done(null, false);
-//     }
-// }));
+  try {
+    await users.add({ username, password: hashedPassword });
+    ctx.status = 201;
+    ctx.body = { message: "Registration successful" };
+  } catch (error) {
+    ctx.status = 500;
+    ctx.body = { message: "Error during registration" };
+  }
 
-passport.use(new BasicStrategy(async (username:string, password:string, done) => {
-    let result: any[] = [];
-    try{
-        result = await users.findByUsername(username);
-    } catch (error) {
-        console.error(`Error during authentication for user ${username}:${error}`);
-        done(null, false);
-    }
-    
-    if(result.length){
-        const user = result[0]; //[{username:xxx, password:...}]
-        //{username:xxx, password:...}, password
-        if(verifyPassword(user, password)) {
-            done(null, {user: user});
-        } else {
-            console.log(`Password incorrect for ${username}`);
-            done(null, false);
-        }
-    } else {
-        console.log(`No user found with username ${username}`);
-        done(null, false);
-    }
+  await next();
+};
 
-}))
+// 使用者登入
+export const login = async (ctx: RouterContext, next: any) => {
+  const { username, password } = ctx.request.body as { username: string; password: string };
+  const result = await users.findByUsername(username);
 
-export const basicAuth = async (ctx: RouterContext, next:any) => {
-    await passport.authenticate("basic", {session: false})(ctx, next);
-    // const auth = passport.authenticate("basic", {session: false});
-    // await auth(ctx, next);
-    if (ctx.status == 401) {
-        ctx.body = {
-            message: 'you are not authorized'
-        };
-    } else {
-        // ctx.body = {
-        //     message: 'you are passed'
-        // };
-        return ctx.state;
-    };
-}
+  if (!result.length) {
+    ctx.status = 401;
+    ctx.body = { message: "User not found" };
+    return;
+  }
+
+  const user = result[0] as { id: number; username: string; password: string };
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    ctx.status = 401;
+    ctx.body = { message: "Incorrect password" };
+    return;
+  }
+
+  const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, {
+    expiresIn: "1h",
+  });
+
+  ctx.body = { token };
+  await next();
+};
