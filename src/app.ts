@@ -16,7 +16,8 @@ app.use(bodyParser());
 // 掛載路由
 app.use(user.routes());
 app.use(user.allowedMethods());
-
+app.use(movie.routes());
+app.use(movie.allowedMethods());
 app.use(serve("./docs"));
 
 router.get("/", (ctx) => {
