@@ -40,15 +40,29 @@ exports.login = exports.register = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const users = __importStar(require("../models/users"));
-const SECRET_KEY = "your_secret_key"; // 建議放到 config.ts
+const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key"; // 建議放到環境變數
+const ADMIN_SECRET_HASH = process.env.ADMIN_SECRET_HASH || ""; // 管理員密鑰雜湊，放在 .env
 // 註冊新使用者
 const register = async (ctx, next) => {
-    const { username, password } = ctx.request.body;
+    const { username, password, isAdmin, adminToken } = ctx.request.body;
     const hashedPassword = await bcryptjs_1.default.hash(password, 10);
+    let role = "user";
+    // 如果勾選了 I am admin，就檢查 adminToken
+    if (isAdmin) {
+        const isValidAdmin = await bcryptjs_1.default.compare(adminToken || "", ADMIN_SECRET_HASH);
+        if (isValidAdmin) {
+            role = "admin";
+        }
+        else {
+            ctx.status = 403;
+            ctx.body = { message: "Invalid admin token" };
+            return;
+        }
+    }
     try {
-        await users.add({ username, password: hashedPassword });
+        await users.add({ username, password: hashedPassword, role });
         ctx.status = 201;
-        ctx.body = { message: "Registration successful" };
+        ctx.body = { message: "Registration successful", role };
     }
     catch (error) {
         ctx.status = 500;
@@ -73,10 +87,9 @@ const login = async (ctx, next) => {
         ctx.body = { message: "Incorrect password" };
         return;
     }
-    const token = jsonwebtoken_1.default.sign({ id: user.id, username: user.username }, SECRET_KEY, {
-        expiresIn: "1h",
-    });
-    ctx.body = { token };
+    // 登入成功 → JWT 內帶 role
+    const token = jsonwebtoken_1.default.sign({ id: user.id, username: user.username, role: user.role }, SECRET_KEY, { expiresIn: "1h" });
+    ctx.body = { token, role: user.role };
     await next();
 };
 exports.login = login;
