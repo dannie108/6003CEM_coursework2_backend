@@ -59,7 +59,7 @@ const deleteMovie = async (ctx: RouterContext) => {
   ctx.body = result.status === 201 ? { message: `Removed movie ${id}` } : { error: "Failed to delete movie" };
 };
 
-// 推薦電影
+
 const recommendMovie = async (ctx: RouterContext) => {
   const movieId = Number(ctx.params.id);
   const userId = ctx.state.user.id;
@@ -73,7 +73,7 @@ const recommendMovie = async (ctx: RouterContext) => {
   }
 };
 
-// 取得推薦排行榜
+
 const getRecommendedMovies = async (ctx: RouterContext) => {
   try {
   const movies = await run_query("SELECT * FROM movies ORDER BY recommend_count DESC", []);
@@ -84,7 +84,7 @@ const getRecommendedMovies = async (ctx: RouterContext) => {
   }
 };
 
-// 路由掛載
+
 router.get("/", getAllMovies);
 router.get("/recommend", authMiddleware, getRecommendedMovies);
 router.get("/:id", getMovieById);

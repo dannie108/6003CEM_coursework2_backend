@@ -8,7 +8,7 @@ It provides user authentication and movie management.
 ### Features
 - User registration and JWT-based authentication
 - Role-based access (User / Admin)
-- Full CRUD operations for Movies
+-  CRUD operations for Movies
 - MySQL database integration
 
 ## Tech Stack
@@ -23,9 +23,9 @@ It provides user authentication and movie management.
 1. **Clone the repository**
    ```bash
    git clone https://github.com/dannie108/6003CEM_coursework2_backend.git
-   cd 6003CEM-Coursework2
+   cd 6003CE_Coursework2_backend
 
-2. Install dependenciesBash
+2. Install dependencies
     ```bash
     npm install
 
@@ -46,16 +46,14 @@ For database setup, you can refer to config.ts and make changes
     connection_limit:100
 }
 ```
-4. Install dependencies
-    ```bash
-    npm install
 
-5. Compile files
+
+4. Compile files
     ```bash
     npx tsc
 
 
-6. Start the server
+5. Start the server
     ```bash
     npm run start
 
@@ -92,6 +90,9 @@ Due to outcomes of the assignment, some APIs are not used in front end.
 
 ### Movies Routes
 
+
+### Movies Routes
+
 | Endpoint          | Method   | Description                       |
 |---------------|--------|----------------------------|
 | /movies       | GET    | Get all movies               |
@@ -99,6 +100,8 @@ Due to outcomes of the assignment, some APIs are not used in front end.
 | /movies/{id}  | GET    | Get movie by ID            |
 | /movies/{id}  | PUT    | Update movie                   |
 | /movies/{id}  | DELETE | Delete movie                   |
+| /movies/recommend | GET    | Get recommend movies                   |
+| /movies/{id}/recommend  | POST | Recommend movies                 |
 
 
 
