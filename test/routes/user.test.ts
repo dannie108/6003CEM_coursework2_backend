@@ -1,10 +1,10 @@
 // user.test.ts
 // 測試使用者註冊與登入流程
 import request from "supertest";
-import app from "../src/app"; // 你的 Koa app
+import app from "../../src/app"; // 你的 Koa app
 
 describe("User API", () => {
-  // 測試註冊
+  // test registration
   it("should register a new user", async () => {
     const res = await request(app.callback())
       .post("/api/v1/users/register")
@@ -14,7 +14,7 @@ describe("User API", () => {
     expect(res.body.message).toBe("Registration successful");
   });
 
-  // 測試登入
+  // test login
   it("should login with correct credentials", async () => {
     const res = await request(app.callback())
       .post("/api/v1/users/login")
@@ -24,7 +24,7 @@ describe("User API", () => {
     expect(res.body).toHaveProperty("token");
   });
 
-  // 測試登入失敗
+  // test login fail
   it("should reject login with wrong password", async () => {
     const res = await request(app.callback())
       .post("/api/v1/users/login")

@@ -16,6 +16,6 @@ afterEach(() => {
 });
 
 test('Server works', async () => {
-    require('../../src/index');
+    require('../../src/app');
     expect(mockListen.mock.calls.length).toBe(0);
 })

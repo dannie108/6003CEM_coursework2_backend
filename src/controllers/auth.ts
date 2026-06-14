@@ -4,10 +4,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import * as users from "../models/users";
 
-const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key"; // 建議放到環境變數
-const ADMIN_SECRET_HASH = process.env.ADMIN_SECRET_HASH || ""; // 管理員密鑰雜湊，放在 .env
+const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key";
+// const ADMIN_SECRET_HASH = process.env.ADMIN_SECRET_HASH || ""; // admin key .env
 
-// 註冊新使用者
+// register
 export const register = async (ctx: RouterContext, next: any) => {
   const { username, password, isAdmin, adminToken } = ctx.request.body as {
     username: string;
@@ -19,10 +19,10 @@ export const register = async (ctx: RouterContext, next: any) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   let role = "user";
 
-  // 如果勾選了 I am admin，就檢查 adminToken
+  // if checked 'I am admin', check adminToken
   if (isAdmin) {
-    const isValidAdmin = (adminToken == "admin"); 
-    //const isValidAdmin = await bcrypt.compare(adminToken || "", ADMIN_SECRET_HASH);
+    const isValidAdmin = adminToken === "admin";
+    // const isValidAdmin = await bcrypt.compare(adminToken || "", ADMIN_SECRET_HASH);
 
     if (isValidAdmin) {
       role = "admin";
@@ -37,7 +37,7 @@ export const register = async (ctx: RouterContext, next: any) => {
     await users.add({ username, password: hashedPassword, role });
     ctx.status = 201;
     ctx.body = { message: "Registration successful", role };
-  } catch (error) {
+  } catch {
     ctx.status = 500;
     ctx.body = { message: "Error during registration" };
   }
@@ -45,12 +45,12 @@ export const register = async (ctx: RouterContext, next: any) => {
   await next();
 };
 
-// 使用者登入
+// login
 export const login = async (ctx: RouterContext, next: any) => {
   const { username, password } = ctx.request.body as { username: string; password: string };
   const result = await users.findByUsername(username);
 
-  if (!result.length) {
+  if (!result) {
     ctx.status = 401;
     ctx.body = { message: "User not found" };
     return;
@@ -65,13 +65,13 @@ export const login = async (ctx: RouterContext, next: any) => {
     return;
   }
 
-  // 登入成功 → JWT 內帶 role
+  // login success → generate JWT
   const token = jwt.sign(
     { id: user.id, username: user.username, role: user.role },
     SECRET_KEY,
     { expiresIn: "1h" }
   );
 
-  ctx.body = { token, role: user.role };
+  ctx.body = { token, id: user.id, role: user.role };
   await next();
 };

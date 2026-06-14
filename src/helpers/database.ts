@@ -1,4 +1,4 @@
-// helpers/database.ts
+// src/helpers/database.ts
 import { Sequelize, QueryTypes } from "sequelize";
 import config from '../config';
 
@@ -7,7 +7,7 @@ const createSequelize = () => {
     host: config.host,
     port: config.port,
     dialect: 'mysql',
-    logging: false, // 若要看 SQL 與連線資訊，改成 console.log
+    logging: false,
     pool: {
       max: 10,
       min: 0,
@@ -26,11 +26,11 @@ export const run_query = async (query: string, values: any) => {
       type: QueryTypes.SELECT
     });
     await sequelize.close();
-    return data;
+    return { rows: data };
   } catch (err: any) {
     console.error('DB error SELECT', err, query, values);
     await sequelize.close();
-    throw 'Database query error';
+    throw new Error('Database query error');
   }
 };
 
@@ -38,16 +38,19 @@ export const run_insert = async (sql: string, values: any) => {
   const sequelize = createSequelize();
   try {
     await sequelize.authenticate();
-    const data = await sequelize.query(sql, {
+    const result: any = await sequelize.query(sql, {
       replacements: values,
       type: QueryTypes.INSERT
     });
     await sequelize.close();
-    return data;
+    // MySQL INSERT → [insertId, affectedRows]
+    const insertId = Array.isArray(result) ? result[0] : null;
+    const affectedRows = Array.isArray(result) ? result[1] : 0;
+    return { insertId, affectedRows };
   } catch (err: any) {
     console.error('DB error INSERT', err, sql, values);
     await sequelize.close();
-    throw 'Database query error';
+    throw new Error('Database query error');
   }
 };
 
@@ -55,16 +58,18 @@ export const run_update = async (sql: string, values: any) => {
   const sequelize = createSequelize();
   try {
     await sequelize.authenticate();
-    const data = await sequelize.query(sql, {
+    const result: any = await sequelize.query(sql, {
       replacements: values,
       type: QueryTypes.UPDATE
     });
     await sequelize.close();
-    return data;
+    // UPDATE → [affectedRows]
+    const affectedRows = Array.isArray(result) ? result[0] : 0;
+    return { affectedRows };
   } catch (err: any) {
     console.error('DB error UPDATE', err, sql, values);
     await sequelize.close();
-    throw 'Database query error';
+    throw new Error('Database query error');
   }
 };
 
@@ -72,15 +77,17 @@ export const run_delete = async (sql: string, values: any) => {
   const sequelize = createSequelize();
   try {
     await sequelize.authenticate();
-    const data = await sequelize.query(sql, {
+    const result: any = await sequelize.query(sql, {
       replacements: values,
       type: QueryTypes.DELETE
     });
     await sequelize.close();
-    return data;
+    // DELETE → [affectedRows]
+    const affectedRows = Array.isArray(result) ? result[0] : 0;
+    return { affectedRows };
   } catch (err: any) {
     console.error('DB error DELETE', err, sql, values);
     await sequelize.close();
-    throw 'Database query error';
+    throw new Error('Database query error');
   }
 };

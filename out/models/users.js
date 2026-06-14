@@ -38,74 +38,90 @@ exports.findByUsername = exports.del = exports.update = exports.add = exports.ge
 const db = __importStar(require("../helpers/database"));
 const getAll = async () => {
     const query = "SELECT * FROM users";
-    const data = await db.run_query(query, []);
-    return data;
+    try {
+        const result = await db.run_query(query, []);
+        return result.rows;
+    }
+    catch (err) {
+        console.error("getAll DB error:", err);
+        return [];
+    }
 };
 exports.getAll = getAll;
 const getById = async (id) => {
-    const query = "SELECT * FROM users WHERE id = ?";
-    const values = [id];
-    const data = await db.run_query(query, values);
-    return data;
+    const userId = Number(id);
+    if (Number.isNaN(userId) || userId <= 0) {
+        console.error("Invalid id passed to getById:", id, "(type:", typeof id, ")");
+        return [];
+    }
+    try {
+        const result = await db.run_query("SELECT * FROM users WHERE id = ?", [userId]);
+        return result.rows;
+    }
+    catch (err) {
+        console.error("getById DB error:", err);
+        return [];
+    }
 };
 exports.getById = getById;
 const add = async (user) => {
-    const keys = Object.keys(user); // keys = ['username', 'email', 'password']
-    const values = Object.values(user); // values = ['sam', 'sam@gmail.com', 'P@ssw0rd']
+    const keys = Object.keys(user);
+    const values = Object.values(user);
     const key = keys.join(',');
-    let param = '';
-    for (let i = 0; i < values.length; i++) {
-        param += '?,';
-    }
-    ;
-    param = param.slice(0, -1);
+    const param = Array(values.length).fill('?').join(',');
     const query = `INSERT INTO users (${key}) VALUES (${param})`;
     try {
-        await db.run_insert(query, values);
-        return { status: 201 };
+        const result = await db.run_insert(query, values);
+        return { status: 201, id: result.insertId, affectedRows: result.affectedRows };
     }
     catch (err) {
-        return err;
+        console.error("add DB error:", err);
+        return { status: 500, error: err.message };
     }
 };
 exports.add = add;
 const update = async (id, user) => {
     let query = "UPDATE users SET ";
-    const values = { id: id }; //{ id: 4, username: 'sam', email: 'sam@outlook.com'}
+    const values = { id };
     const setClauses = [];
     Object.keys(user).forEach((key) => {
         setClauses.push(`${key} = :${key}`);
         values[key] = user[key];
     });
-    query += setClauses.join(', ') + " WHERE id = :id;"; //UPDATE users SET username = :username, email = :email WHERE id = :id
+    query += setClauses.join(', ') + " WHERE id = :id;";
     try {
-        await db.run_update(query, values);
-        return { status: 201 };
+        const result = await db.run_update(query, values);
+        return { status: 200, affectedRows: result.affectedRows };
     }
     catch (err) {
-        return err;
+        console.error("update DB error:", err);
+        return { status: 500, error: err.message };
     }
 };
 exports.update = update;
 const del = async (id) => {
     const query = `DELETE FROM users WHERE id = :id;`;
-    const values = {
-        id: id
-    };
+    const values = { id };
     try {
-        await db.run_delete(query, values);
-        return { status: 201 };
+        const result = await db.run_delete(query, values);
+        return { status: 200, affectedRows: result.affectedRows };
     }
     catch (err) {
-        return err;
+        console.error("del DB error:", err);
+        return { status: 500, error: err.message };
     }
 };
 exports.del = del;
-// username, password, email, ...
 const findByUsername = async (username) => {
     const query = 'SELECT * FROM users WHERE username = ?';
-    const user = await db.run_query(query, [username]);
-    return user;
+    try {
+        const result = await db.run_query(query, [username]);
+        return result.rows;
+    }
+    catch (err) {
+        console.error("findByUsername DB error:", err);
+        return [];
+    }
 };
 exports.findByUsername = findByUsername;
 //# sourceMappingURL=users.js.map

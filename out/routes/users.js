@@ -37,42 +37,53 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.router = void 0;
-// routes/users.ts
-// 使用者相關路由：註冊、登入、CRUD
+// src/routes/users.ts
 const koa_router_1 = __importDefault(require("koa-router"));
 const koa_bodyparser_1 = __importDefault(require("koa-bodyparser"));
 const model = __importStar(require("../models/users"));
-const auth_1 = require("../controllers/auth"); // 新增 register/login controller
-const authMiddleware_1 = require("../middleware/authMiddleware"); // JWT 驗證
-const validation_1 = require("../middleware/validation"); // 驗證使用者資料
+const db = __importStar(require("../helpers/database"));
+const auth_1 = require("../controllers/auth");
+const authMiddleware_1 = require("../middleware/authMiddleware");
+const validation_1 = require("../middleware/validation");
 const router = new koa_router_1.default({ prefix: "/api/v1/users" });
 exports.router = router;
-// 取得目前登入使用者資訊
-const getMe = async (ctx, next) => {
-    const username = ctx.state.user?.username;
-    if (!username) {
-        ctx.status = 400;
-        ctx.body = { err: "No username in state" };
+// -------------------- User Info --------------------
+const getMe = async (ctx) => {
+    let userId = Number(ctx.state.user?.id);
+    if (!userId || isNaN(userId)) {
+        userId = Number(ctx.query.userId);
+    }
+    if (!userId || isNaN(userId)) {
+        ctx.status = 401;
+        ctx.body = { err: "Invalid user session" };
         return;
     }
-    const user = await model.findByUsername(username);
-    if (user.length) {
-        ctx.body = user[0];
+    try {
+        const user = await model.getById(userId);
+        if (user && user.length > 0) {
+            ctx.body = user[0];
+        }
+        else {
+            ctx.status = 404;
+            ctx.body = { err: "User not found" };
+        }
     }
-    else {
-        ctx.body = {};
+    catch (err) {
+        console.error("Get me error:", err);
+        ctx.status = 500;
+        ctx.body = { err: "Database error" };
     }
-    await next();
 };
-// 取得所有使用者
-const getAll = async (ctx, next) => {
+const getAll = async (ctx) => {
     const users = await model.getAll();
     ctx.body = users.length ? users : {};
-    await next();
 };
-// 依 ID 取得使用者
-const getById = async (ctx, next) => {
-    const id = Number(ctx.params.id);
+const getById = async (ctx) => {
+    let id = Number(ctx.params.id);
+    // 如果路由參數不是有效數字，就 fallback 用 token 的 id 或 query
+    if (!id || isNaN(id)) {
+        id = Number(ctx.state.user?.id || ctx.query.userId);
+    }
     const users = await model.getById(id);
     if (!Number.isInteger(id) || id <= 0 || !users.length) {
         ctx.status = 400;
@@ -81,11 +92,12 @@ const getById = async (ctx, next) => {
     else {
         ctx.body = users[0];
     }
-    await next();
 };
-// 更新使用者 (需 JWT + validateUser)
-router.put("/:id", authMiddleware_1.authMiddleware, (0, koa_bodyparser_1.default)(), validation_1.validateUser, async (ctx, next) => {
-    const id = Number(ctx.params.id);
+const updateUser = async (ctx) => {
+    let id = Number(ctx.params.id);
+    if (!id || isNaN(id)) {
+        id = Number(ctx.state.user?.id || ctx.request.body.userId);
+    }
     const body = ctx.request.body;
     const result = await model.update(id, body);
     if (result.status == 201) {
@@ -96,11 +108,12 @@ router.put("/:id", authMiddleware_1.authMiddleware, (0, koa_bodyparser_1.default
         ctx.status = 500;
         ctx.body = { err: "update data failed" };
     }
-    await next();
-});
-// 刪除使用者 (需 JWT)
-router.delete("/:id", authMiddleware_1.authMiddleware, async (ctx, next) => {
-    const id = Number(ctx.params.id);
+};
+const deleteUser = async (ctx) => {
+    let id = Number(ctx.params.id);
+    if (!id || isNaN(id)) {
+        id = Number(ctx.state.user?.id || ctx.request.body.userId);
+    }
     const result = await model.del(id);
     if (result.status == 201) {
         ctx.status = 201;
@@ -110,16 +123,100 @@ router.delete("/:id", authMiddleware_1.authMiddleware, async (ctx, next) => {
         ctx.status = 500;
         ctx.body = { err: "delete data failed" };
     }
-    await next();
-});
-// 新增使用者 (註冊流程用 register controller)
+};
+// -------------------- Watchlist / Watched --------------------
+const addToWatchlist = async (ctx) => {
+    const { movieId, userId: bodyUserId } = ctx.request.body;
+    if (!movieId || isNaN(Number(movieId))) {
+        ctx.status = 400;
+        ctx.body = { error: "movieId is required and must be a number" };
+        return;
+    }
+    let userId = Number(ctx.state.user?.id);
+    if (!userId || isNaN(userId)) {
+        userId = Number(bodyUserId);
+    }
+    if (!userId || isNaN(userId)) {
+        ctx.status = 401;
+        ctx.body = { error: "Unauthorized: invalid user id" };
+        return;
+    }
+    try {
+        await db.run_insert("INSERT INTO user_movie_status (user_id, movie_id, status) VALUES (?, ?, ?)", [userId, movieId, "watchlist"]);
+        ctx.body = { success: true };
+    }
+    catch (err) {
+        ctx.status = 400;
+        ctx.body = { error: "Already in watchlist or DB error" };
+    }
+};
+const getWatchlist = async (ctx) => {
+    let userId = Number(ctx.state.user?.id);
+    if (!userId || isNaN(userId)) {
+        userId = Number(ctx.query.userId);
+    }
+    if (!userId || isNaN(userId)) {
+        ctx.status = 400;
+        ctx.body = { error: "Invalid user id" };
+        return;
+    }
+    const movies = await db.run_query(`SELECT m.* 
+     FROM user_movie_status ums 
+     JOIN movies m ON ums.movie_id = m.id 
+     WHERE ums.user_id = ? AND ums.status = ?`, [userId, "watchlist"]);
+    ctx.body = movies;
+};
+const addToWatched = async (ctx) => {
+    const { movieId, userId: bodyUserId } = ctx.request.body;
+    if (!movieId || isNaN(Number(movieId))) {
+        ctx.status = 400;
+        ctx.body = { error: "movieId is required and must be a number" };
+        return;
+    }
+    let userId = Number(ctx.state.user?.id);
+    if (!userId || isNaN(userId)) {
+        userId = Number(bodyUserId);
+    }
+    if (!userId || isNaN(userId)) {
+        ctx.status = 401;
+        ctx.body = { error: "Unauthorized: invalid user id" };
+        return;
+    }
+    try {
+        await db.run_insert("INSERT INTO user_movie_status (user_id, movie_id, status) VALUES (?, ?, ?)", [userId, movieId, "watched"]);
+        ctx.body = { success: true };
+    }
+    catch (err) {
+        ctx.status = 400;
+        ctx.body = { error: "Already marked watched or DB error" };
+    }
+};
+const getWatched = async (ctx) => {
+    let userId = Number(ctx.state.user?.id);
+    if (!userId || isNaN(userId)) {
+        userId = Number(ctx.query.userId);
+    }
+    if (!userId || isNaN(userId)) {
+        ctx.status = 400;
+        ctx.body = { error: "Invalid user id" };
+        return;
+    }
+    const movies = await db.run_query(`SELECT m.* 
+     FROM user_movie_status ums 
+     JOIN movies m ON ums.movie_id = m.id 
+     WHERE ums.user_id = ? AND ums.status = ?`, [userId, "watched"]);
+    ctx.body = movies;
+};
+// -------------------- Routes --------------------
 router.post("/register", (0, koa_bodyparser_1.default)(), auth_1.register);
-// 登入使用者 (login controller)
 router.post("/login", (0, koa_bodyparser_1.default)(), auth_1.login);
-// 取得目前登入使用者
 router.get("/me", authMiddleware_1.authMiddleware, getMe);
-// 取得所有使用者 (需 JWT)
 router.get("/", authMiddleware_1.authMiddleware, getAll);
-// 依 ID 取得使用者 (需 JWT)
 router.get("/:id", authMiddleware_1.authMiddleware, getById);
+router.put("/:id", authMiddleware_1.authMiddleware, (0, koa_bodyparser_1.default)(), validation_1.validateUser, updateUser);
+router.delete("/:id", authMiddleware_1.authMiddleware, deleteUser);
+router.get("/watchlist", authMiddleware_1.authMiddleware, getWatchlist);
+router.get("/watched", authMiddleware_1.authMiddleware, getWatched);
+router.post("/watched", authMiddleware_1.authMiddleware, (0, koa_bodyparser_1.default)(), addToWatched);
+router.post("/watchlist", authMiddleware_1.authMiddleware, (0, koa_bodyparser_1.default)(), addToWatchlist);
 //# sourceMappingURL=users.js.map

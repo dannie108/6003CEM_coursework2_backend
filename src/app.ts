@@ -1,4 +1,3 @@
-// src/app.ts
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import cors from "@koa/cors";
@@ -9,16 +8,16 @@ import Router from "koa-router";
 
 const app = new Koa();
 const router = new Router();
-// Middleware
+
 app.use(cors());
 app.use(bodyParser());
 
-// 掛載路由
+
 app.use(user.routes());
 app.use(user.allowedMethods());
 app.use(movie.routes());
 app.use(movie.allowedMethods());
-app.use(serve("./docs"));
+
 
 router.get("/", (ctx) => {
   ctx.body = {
@@ -29,7 +28,7 @@ router.get("/", (ctx) => {
 });
 app.use(router.routes()).use(router.allowedMethods());
 
-// 錯誤處理 & 404
+
 app.use(async (ctx, next) => {
   try {
     await next();
@@ -42,5 +41,7 @@ app.use(async (ctx, next) => {
     ctx.body = { err: err.message || "Internal server error" };
   }
 });
+
+app.use(serve("./docs"));
 
 export default app;

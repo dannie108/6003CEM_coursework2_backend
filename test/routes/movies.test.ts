@@ -1,24 +1,23 @@
-// test/routes/movies.test.ts
 import request from "supertest";
-import app from "../../src/app"; // 你的 Koa app
+import app from "../../src/app";
 import jwt from "jsonwebtoken";
 
-const SECRET_KEY = "your_secret_key"; // 與 authMiddleware 相同
+const SECRET_KEY = "your_secret_key"; 
 
-// 建立測試用 JWT
+// test
 const testToken = jwt.sign({ id: 1, username: "admin" }, SECRET_KEY, {
   expiresIn: "1h",
 });
 
 describe("Movies API", () => {
-  // 1. 未登入 GET 成功
+  // 1. GET method without login
   it("should GET movies without login", async () => {
     const res = await request(app.callback()).get("/api/v1/movies");
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
   });
 
-  // 2. 登入後 POST 成功
+  // 2. POST method with login
   it("should POST movie with JWT", async () => {
     const res = await request(app.callback())
       .post("/api/v1/movies")
@@ -29,7 +28,7 @@ describe("Movies API", () => {
     expect(res.body.title).toBe("Test Movie");
   });
 
-  // 3. 未登入 POST → 401
+  // 3.POST method without login back with 401
   it("should reject POST movie without JWT", async () => {
     const res = await request(app.callback())
       .post("/api/v1/movies")
@@ -39,7 +38,7 @@ describe("Movies API", () => {
     expect(res.body.message).toBe("Missing token");
   });
 
-  // 4. 登入後 PUT 成功
+  // 4.PUT method with login
   it("should PUT movie with JWT", async () => {
     const res = await request(app.callback())
       .put("/api/v1/movies/1")
@@ -50,7 +49,7 @@ describe("Movies API", () => {
     expect(res.body.title).toBe("Updated Movie");
   });
 
-  // 5. 未登入 PUT → 401
+  // 5. PUT method without login back with 401
   it("should reject PUT movie without JWT", async () => {
     const res = await request(app.callback())
       .put("/api/v1/movies/1")
@@ -60,7 +59,7 @@ describe("Movies API", () => {
     expect(res.body.message).toBe("Missing token");
   });
 
-  // 6. 登入後 DELETE 成功
+  // 6.  DELETE method with login
   it("should DELETE movie with JWT", async () => {
     const res = await request(app.callback())
       .delete("/api/v1/movies/1")
@@ -70,7 +69,7 @@ describe("Movies API", () => {
     expect(res.body.message).toContain("Removed movie");
   });
 
-  // 7. 未登入 DELETE → 401
+  // 7. DELETE method without login back with 401
   it("should reject DELETE movie without JWT", async () => {
     const res = await request(app.callback()).delete("/api/v1/movies/1");
     expect(res.status).toBe(401);
