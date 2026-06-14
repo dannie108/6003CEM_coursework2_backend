@@ -15,7 +15,6 @@ servers:
 tags:
   - name: Users
     description: API endpoints for user management.
-  
   - name: Movies
     description: Access and perform CRUD operations on movies.
 
@@ -184,4 +183,37 @@ paths:
           description: Movie deleted.
         '500':
           description: Movie delete failed
-    
+
+  /movies/{id}/recommend:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: Numeric id of the movie to recommend
+    post:
+      tags: [Movies]
+      description: Recommend a movie by its ID. Increments recommend_count and records user recommendation.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Movie recommended successfully.
+        '400':
+          description: Already recommended or DB error.
+        '401':
+          description: Unauthorized
+
+  /movies/recommend:
+    get:
+      tags: [Movies]
+      description: Get recommended movies ranked by recommend_count.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of movies ordered by recommendation count.
+        '500':
+          description: Failed to fetch recommended movies.
+
