@@ -1,5 +1,4 @@
-export const movie = {
-
+{
   "$schema": "http://json-schema.org/draft-04/schema#",
   "id": "/movie",
   "title": "Movie",
@@ -48,6 +47,3 @@ export const movie = {
   },
   "required": ["title", "genre", "year", "rating"]
 }
-
-
-

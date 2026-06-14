@@ -6,13 +6,13 @@ import { run_insert, run_update, run_query } from "../helpers/database";
 
 const router = new Router({ prefix: "/api/v1/movies" });
 
-// 取得所有電影
+// get all movies
 const getAllMovies = async (ctx: RouterContext) => {
   const movies = await model.getAll();
   ctx.body = movies.length ? movies : [];
 };
 
-// 依 ID 取得電影
+// get movie by id 
 const getMovieById = async (ctx: RouterContext) => {
   const id = Number(ctx.params.id);
 
@@ -34,7 +34,7 @@ const getMovieById = async (ctx: RouterContext) => {
 };
 
 
-// 新增電影
+// add movie
 const createMovie = async (ctx: RouterContext) => {
   const body = ctx.request.body;
   const result = await model.add(body);
@@ -42,21 +42,21 @@ const createMovie = async (ctx: RouterContext) => {
   ctx.body = result.status === 201 ? body : { error: "Failed to add movie" };
 };
 
-// 更新電影
+//update movie
 const updateMovie = async (ctx: RouterContext) => {
   const id = Number(ctx.params.id);
   const body = ctx.request.body;
   const result = await model.update(id, body);
   ctx.status = result.status;
-  ctx.body = result.status === 201 ? body : { error: "Failed to update movie" };
+  ctx.body = result.status === 200 ? body : { error: "Failed to update movie" };
 };
 
-// 刪除電影
+// delete movie
 const deleteMovie = async (ctx: RouterContext) => {
   const id = Number(ctx.params.id);
   const result = await model.del(id);
   ctx.status = result.status;
-  ctx.body = result.status === 201 ? { message: `Removed movie ${id}` } : { error: "Failed to delete movie" };
+  ctx.body = result.status === 200 ? { message: `Removed movie ${id}` } : { error: "Failed to delete movie" };
 };
 
 

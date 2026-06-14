@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "/user",
+  "title": "User",
+  "description": "A user account in the system",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Auto-incremented user ID",
+      "type": "integer",
+      "minimum": 1
+    },
+    "username": {
+      "description": "Unique username of the user",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 100
+    },
+    "password": {
+      "description": "User's password (hashed)",
+      "type": "string",
+      "minLength": 8
+    },
+    "role": {
+      "description": "Role of the user (admin or user)",
+      "type": "string",
+      "enum": ["user", "admin"],
+      "default": "user"
+    },
+    "created_at": {
+      "description": "Timestamp when the user was created",
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["username", "password"]
+}

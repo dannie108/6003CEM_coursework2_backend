@@ -1,0 +1,219 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Back End API of 6003CEM Coursework 2
+  description: Backend API for a modern film catalogue and recommendation system
+  contact:
+    name: CHEUNG, Chun Yiu
+    email: 257040615@stu.vtc.edu.hk
+  license:
+    name: Apache 2.0
+    url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+servers:
+  - url: 'http://localhost:10888/api/v1'
+    description: Development server
+tags:
+  - name: Users
+    description: API endpoints for user management.
+  - name: Movies
+    description: Access and perform CRUD operations on movies.
+
+paths:
+  /users/register:
+    post:
+      tags: [Users]
+      description: Register new user
+      requestBody:
+        description: Registration data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './user.json#'
+      responses:
+        '201':
+          description: User registered.
+        '400':
+          description: Invalid input
+        '500':
+          description: Registration failed.
+
+  /users/login:
+    post:
+      tags: [Users]
+      description: Login user
+      requestBody:
+        description: User login credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required: [username, password]
+      responses:
+        '200':
+          description: Login success, returns JWT
+        '401':
+          description: Unauthorized
+
+  /users/me:
+    get:
+      tags: [Users]
+      description: Get current logged-in user info
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+        '401':
+          description: Unauthorized
+
+  /users:
+    get:
+      tags: [Users]
+      description: Get ALL users from database
+      responses:
+        '200':
+          description: View of ALL user records.
+
+  /users/{id}:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: Numeric id of the user
+    get:
+      tags: [Users]
+      description: Get user by id.
+      responses:
+        '200':
+          description: View of the user record.
+        '404':
+          description: User not found.
+    put:
+      tags: [Users]
+      description: Update user by id.
+      requestBody:
+        description: Update user info
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './user.json#'
+      responses:
+        '200':
+          description: User updated.
+        '500':
+          description: User update failed.
+    delete:
+      tags: [Users]
+      description: Delete user by id.
+      responses:
+        '200':
+          description: User deleted.
+        '500':
+          description: User delete failed.
+
+  /movies:
+    get:
+      tags: [Movies]
+      description: Get ALL movies from database
+      responses:
+        '200':
+          description: View of ALL movie records.
+    post:
+      tags: [Movies]
+      description: Create new movie
+      requestBody:
+        description: All new movie data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './movie.json#'
+      responses:
+        '201':
+          description: Movie created.
+        '500':
+          description: Movie creation failed.
+
+  /movies/{id}:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: Numeric id of the movie
+    get:
+      tags: [Movies]
+      description: Get movie by id.
+      responses:
+        '200':
+          description: View of the movie record.
+        '404':
+          description: Movie not found.
+    put:
+      tags: [Movies]
+      description: Update movie by id.
+      requestBody:
+        description: Update movie info
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './movie.json#'
+      responses:
+        '200':
+          description: Movie updated.
+        '500':
+          description: Movie update failed.
+    delete:
+      tags: [Movies]
+      description: Delete movie by id.
+      responses:
+        '200':
+          description: Movie deleted.
+        '500':
+          description: Movie delete failed
+
+  /movies/{id}/recommend:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: Numeric id of the movie to recommend
+    post:
+      tags: [Movies]
+      description: Recommend a movie by its ID. Increments recommend_count and records user recommendation.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Movie recommended successfully.
+        '400':
+          description: Already recommended or DB error.
+        '401':
+          description: Unauthorized
+
+  /movies/recommend:
+    get:
+      tags: [Movies]
+      description: Get recommended movies ranked by recommend_count.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of movies ordered by recommendation count.
+        '500':
+          description: Failed to fetch recommended movies.
+

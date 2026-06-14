@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 const SECRET_KEY = "your_secret_key"; 
 
-// test
+
 const testToken = jwt.sign({ id: 1, username: "admin" }, SECRET_KEY, {
   expiresIn: "1h",
 });
@@ -24,11 +24,11 @@ describe("Movies API", () => {
       .set("Authorization", `Bearer ${testToken}`)
       .send({ title: "Test Movie", genre: "Action", year: 2026, rating: 8.5 });
 
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(201); // 新增成功 → 201 Created
     expect(res.body.title).toBe("Test Movie");
   });
 
-  // 3.POST method without login back with 401
+  // 3. POST method without login back with 401
   it("should reject POST movie without JWT", async () => {
     const res = await request(app.callback())
       .post("/api/v1/movies")
@@ -38,14 +38,14 @@ describe("Movies API", () => {
     expect(res.body.message).toBe("Missing token");
   });
 
-  // 4.PUT method with login
+  // 4. PUT method with login
   it("should PUT movie with JWT", async () => {
     const res = await request(app.callback())
       .put("/api/v1/movies/1")
       .set("Authorization", `Bearer ${testToken}`)
       .send({ title: "Updated Movie", rating: 9.0 });
 
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(200); // 更新成功 → 200 OK
     expect(res.body.title).toBe("Updated Movie");
   });
 
@@ -59,13 +59,13 @@ describe("Movies API", () => {
     expect(res.body.message).toBe("Missing token");
   });
 
-  // 6.  DELETE method with login
+  // 6. DELETE method with login
   it("should DELETE movie with JWT", async () => {
     const res = await request(app.callback())
       .delete("/api/v1/movies/1")
       .set("Authorization", `Bearer ${testToken}`);
 
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(200); // 刪除成功 → 200 OK
     expect(res.body.message).toContain("Removed movie");
   });
 

@@ -1,4 +1,3 @@
-// src/models/users.ts
 import * as db from '../helpers/database';
 
 export const getAll = async () => {

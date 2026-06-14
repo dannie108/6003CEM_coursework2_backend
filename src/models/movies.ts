@@ -1,7 +1,6 @@
-// src/models/movies.ts
 import * as db from "../helpers/database";
 
-// 取得所有電影
+// get all movies
 export const getAll = async () => {
   const query = "SELECT * FROM movies;";
   try {
@@ -13,7 +12,7 @@ export const getAll = async () => {
   }
 };
 
-// 依 ID 取得電影
+// get movie by id 
 export const getById = async (id: number) => {
   try {
     const result = await db.run_query("SELECT * FROM movies WHERE id = ?;", [id]);

@@ -1,4 +1,3 @@
-// src/routes/users.ts
 import Router, { RouterContext } from "koa-router";
 import bodyParser from "koa-bodyparser";
 import * as model from "../models/users";
@@ -45,7 +44,7 @@ const getAll = async (ctx: RouterContext) => {
 const getById = async (ctx: RouterContext) => {
   let id = Number(ctx.params.id);
 
-  // 如果路由參數不是有效數字，就 fallback 用 token 的 id 或 query
+
   if (!id || isNaN(id)) {
     id = Number(ctx.state.user?.id || ctx.query.userId);
   }
